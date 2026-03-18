@@ -31,16 +31,22 @@
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
     "@iarna/toml": "^2.2.5",
-    "@vercel/ncc": "^0.38.1",
+    "@vercel/ncc": "^0.38.4",
     "conventional-changelog": "^5.1.0",
     "conventional-changelog-angular": "^7.0.0",
     "conventional-changelog-conventionalcommits": "^7.0.2",
     "conventional-changelog-eslint": "^5.0.0",
     "conventional-recommended-bump": "^9.0.0",
-    "git-semver-tags": "7.0.1",
+    "git-semver-tags": "^7.0.1",
     "object-path": "^0.11.8",
     "properties": "^1.2.1",
-    "semver": "^7.6.3",
-    "yaml": "^2.6.0"
+    "semver": "^7.7.4",
+    "yaml": "^2.8.2"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "overrides": {
+    "undici": "^7.0.0"
   }
 }
