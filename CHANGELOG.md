@@ -1,3 +1,12 @@
+# [6.4.0](https://github.com/cloudopsworks/conventional-changelog-action/compare/v6.3.0...v6.4.0) (2026-03-18)
+
+
+### Features
+
+* Bump dependencies, define Node.js version, and add package overrides ([ceef05a](https://github.com/cloudopsworks/conventional-changelog-action/commit/ceef05aa5f2940ea7d7b32cdbb63dc3d0562cd1a))
+
+
+
 # [6.3.0](https://github.com/cloudopsworks/conventional-changelog-action/compare/v6.2.0...v6.3.0) (2026-03-18)
 
 
@@ -39,15 +48,6 @@
 ### BREAKING CHANGES
 
 * prerelease option generates pre[major|minor|patch] release
-
-
-
-# [5.4.0](https://github.com/cloudopsworks/conventional-changelog-action/compare/v5.3.0...v5.4.0) (2024-10-24)
-
-
-### Features
-
-* Added `eslint` preset ([3c6b18c](https://github.com/cloudopsworks/conventional-changelog-action/commit/3c6b18c07653e130ab492400d8360d0dea35c651)), closes [#265](https://github.com/cloudopsworks/conventional-changelog-action/issues/265)
 
 
 
