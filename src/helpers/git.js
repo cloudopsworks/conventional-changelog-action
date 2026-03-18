@@ -10,7 +10,6 @@ module.exports = new (class Git {
 
   constructor() {
     const githubToken = core.getInput('github-token')
-    this.gitPath = core.getInput('git-path')
 
     // Make the Github token secret
     if(githubToken) {
@@ -63,10 +62,6 @@ module.exports = new (class Git {
           execOutput += data.toString()
         },
       },
-    }
-
-    if (this.gitPath) {
-      options.cwd = this.gitPath
     }
 
     const exitCode = await exec.exec(`git ${command}`, null, options)
