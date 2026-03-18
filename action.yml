@@ -3,7 +3,7 @@ description: "Bump version, tag commit and generates changelog with conventional
 author: "Tycho Bokdam"
 
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/index.js"
 
 branding:
@@ -128,6 +128,11 @@ inputs:
 
   git-path:
     description: "Path filter for the logs and version. If set, only commits that match the path filter will be considered"
+    default: ""
+    required: false
+
+  working-dir:
+    description: "Working directory path where the git repository is located. Use this if checkout was done in a subdirectory"
     default: ""
     required: false
 
