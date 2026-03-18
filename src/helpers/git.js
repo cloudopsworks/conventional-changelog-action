@@ -10,6 +10,7 @@ module.exports = new (class Git {
 
   constructor() {
     const githubToken = core.getInput('github-token')
+    this.gitPath = core.getInput('git-path')
 
     // Make the Github token secret
     if(githubToken) {
@@ -21,9 +22,9 @@ module.exports = new (class Git {
     if (ENV === 'dont-use-git') {
       this.exec = (command) => {
         const fullCommand = `git ${command}`
-        
+
         console.log(`Skipping "${fullCommand}" because of test env`)
-        
+
         if (!fullCommand.includes('git remote set-url origin')) {
           this.commandsRun.push(fullCommand)
         }
@@ -62,6 +63,10 @@ module.exports = new (class Git {
           execOutput += data.toString()
         },
       },
+    }
+
+    if (this.gitPath) {
+      options.cwd = this.gitPath
     }
 
     const exitCode = await exec.exec(`git ${command}`, null, options)
