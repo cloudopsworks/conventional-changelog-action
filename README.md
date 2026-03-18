@@ -13,7 +13,7 @@ This action will bump version, tag commit and generate a changelog with conventi
 - **Optional** `git-branch`: The branch used to push. Default is the current branch (`${{ github.ref }}`)
 - **Optional** `git-url`: Git repository domain. Default is `github.com`
 - **Optional** `git-path`: Path filter for the logs and version. If set, only commits that match the path filter will be considered. By default, we won't use this feature(empty string).
-- **Optional** `preset`: Preset that is used from conventional commits. Default is `angular` ([learn more about presets here](https://github.com/TriPSs/conventional-changelog-action/issues/223))
+- **Optional** `preset`: Preset that is used from conventional commits. Default is `angular` ([learn more about presets here](https://github.com/cloudopsworks/conventional-changelog-action/issues/223))
 - **Optional** `tag-prefix`: Prefix for the git tags. Default `v`.
 - **Optional** `input-file`: Read the changelog from this file. This will prepend the newly generated changelogs to the file's content.
 - **Optional** `output-file`: File to output the changelog to. Default `CHANGELOG.md`, when providing `'false'` no file will be generated / updated.
@@ -124,7 +124,7 @@ permissions:
   contents: write
 
 - name: Conventional Changelog Action
-  uses: TriPSs/conventional-changelog-action@v5
+  uses: cloudopsworks/conventional-changelog-action@v6
   with:
     github-token: ${{ secrets.github_token }}
 ```
@@ -137,7 +137,7 @@ Overwrite everything
 
 ```yaml
 - name: Conventional Changelog Action
-  uses: TriPSs/conventional-changelog-action@v5
+  uses: cloudopsworks/conventional-changelog-action@v6
   with:
     github-token: ${{ secrets.github_token }}
     git-message: 'chore(release): {version}'
@@ -159,7 +159,7 @@ No file changelog
 
 ```yaml
 - name: Conventional Changelog Action
-  uses: TriPSs/conventional-changelog-action@v5
+  uses: cloudopsworks/conventional-changelog-action@v6
   with:
     github-token: ${{ secrets.github_token }}
     output-file: "false"
@@ -169,7 +169,7 @@ Tag only
 
 ```yaml
 - name: Conventional Changelog Action
-  uses: TriPSs/conventional-changelog-action@v5
+  uses: cloudopsworks/conventional-changelog-action@v6
   with:
     github-token: ${{ secrets.github_token }}
     skip-commit: "true"
@@ -185,7 +185,7 @@ In CI you might not want to pull extra changes before tagging e.g. if running a 
     fetch-depth: 0
 
 - name: Conventional Changelog Action
-  uses: TriPSs/conventional-changelog-action@v5
+  uses: cloudopsworks/conventional-changelog-action@v6
   with:
     github-token: ${{ secrets.github_token }}
     skip-git-pull: "true"
@@ -195,7 +195,7 @@ Use a custom file for versioning
 
 ```yaml
 - name: Conventional Changelog Action
-  uses: TriPSs/conventional-changelog-action@v5
+  uses: cloudopsworks/conventional-changelog-action@v6
   with:
     github-token: ${{ secrets.github_token }}
     version-file: "my-custom-file.yaml"
@@ -205,7 +205,7 @@ Use a pre-commit hook
 
 ```yaml
 - name: Conventional Changelog Action
-  uses: TriPSs/conventional-changelog-action@v5
+  uses: cloudopsworks/conventional-changelog-action@v6
   with:
     github-token: ${{ secrets.github_token }}
     pre-commit: some/path/pre-commit.js
@@ -216,7 +216,7 @@ Github releases
 ```yaml
 - name: Conventional Changelog Action
   id: changelog
-  uses: TriPSs/conventional-changelog-action@v5
+  uses: cloudopsworks/conventional-changelog-action@v6
   with:
     github-token: ${{ secrets.github_token }}
     output-file: "false"
@@ -244,7 +244,7 @@ To make full use of the Deploy Key, you must set the value of github-token input
     ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
 - name: Conventional Changelog Action
   id: changelog
-  uses: TriPSs/conventional-changelog-action@v5
+  uses: cloudopsworks/conventional-changelog-action@v6
   with:
     github-token: ""
 ```
@@ -273,4 +273,4 @@ Conventional Changelog Action is [MIT licensed](./LICENSE).
 
 ## Collaboration
 
-If you have questions or [issues](https://github.com/TriPSs/conventional-changelog-action/issues), please [open an issue](https://github.com/TriPSs/conventional-changelog-action/issues/new)!
+If you have questions or [issues](https://github.com/cloudopsworks/conventional-changelog-action/issues), please [open an issue](https://github.com/cloudopsworks/conventional-changelog-action/issues/new)!

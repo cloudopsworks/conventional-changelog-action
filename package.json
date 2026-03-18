@@ -10,13 +10,13 @@
     "github",
     "conventional commits"
   ],
-  "homepage": "https://github.com/TriPSs/conventional-changelog-action#readme",
+  "homepage": "https://github.com/cloudopsworks/conventional-changelog-action#readme",
   "bugs": {
-    "url": "https://github.com/TriPSs/conventional-changelog-action/issues"
+    "url": "https://github.com/cloudopsworks/conventional-changelog-action/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TriPSs/conventional-changelog-action.git"
+    "url": "git+https://github.com/cloudopsworks/conventional-changelog-action.git"
   },
   "license": "MIT",
   "author": {
