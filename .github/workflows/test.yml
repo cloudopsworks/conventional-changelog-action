@@ -1257,7 +1257,7 @@ jobs:
 
       - name: Generate changelog
         id: changelog
-        uses: ./
+        uses: ./workingdir
         with:
           working-dir: './workingdir'
           github-token: ${{ secrets.github_token }}
