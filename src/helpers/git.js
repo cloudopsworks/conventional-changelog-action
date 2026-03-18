@@ -21,9 +21,9 @@ module.exports = new (class Git {
     if (ENV === 'dont-use-git') {
       this.exec = (command) => {
         const fullCommand = `git ${command}`
-        
+
         console.log(`Skipping "${fullCommand}" because of test env`)
-        
+
         if (!fullCommand.includes('git remote set-url origin')) {
           this.commandsRun.push(fullCommand)
         }
