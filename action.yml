@@ -131,6 +131,11 @@ inputs:
     default: ""
     required: false
 
+  working-dir:
+    description: "Working directory path where the git repository is located. Use this if checkout was done in a subdirectory"
+    default: ""
+    required: false
+
   skip-ci:
     description: "Adds [skip ci] to commit message, to avoid triggering a new build"
     default: "true"

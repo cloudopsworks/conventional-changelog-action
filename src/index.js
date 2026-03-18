@@ -55,9 +55,16 @@ async function run() {
     const prerelease = core.getBooleanInput('pre-release')
     const skipBump = core.getBooleanInput('skip-bump')
     const noVerify = core.getBooleanInput('no-verify')
+    const workingDir = core.getInput('working-dir')
 
     if (skipCi) {
       gitCommitMessage += ' [skip ci]'
+    }
+
+    // Change working directory if specified
+    if (workingDir) {
+      core.info(`Changing working directory to "${workingDir}"`)
+      process.chdir(workingDir)
     }
 
     core.info(`Using "${preset}" preset`)
@@ -73,6 +80,7 @@ async function run() {
     core.info(`Using "${gitUrl}" as gitUrl`)
     core.info(`Using "${gitBranch}" as gitBranch`)
     core.info(`Using "${gitPath}" as gitPath`)
+    core.info(`Using "${workingDir}" as working directory`)
 
     if (preCommitFile) {
       core.info(`Using "${preCommitFile}" as pre-commit script`)

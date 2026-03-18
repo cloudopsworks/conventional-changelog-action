@@ -55,7 +55,6 @@ module.exports = new (class Git {
    */
   exec = (command) => new Promise(async (resolve, reject) => {
     let execOutput = ''
-    const gitPath = core.getInput('git-path')
 
     const options = {
       listeners: {
@@ -63,10 +62,6 @@ module.exports = new (class Git {
           execOutput += data.toString()
         },
       },
-    }
-
-    if (gitPath) {
-      options.cwd = gitPath
     }
 
     const exitCode = await exec.exec(`git ${command}`, null, options)
