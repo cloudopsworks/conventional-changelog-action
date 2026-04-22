@@ -16,9 +16,19 @@ async function handleVersioningByExtension(ext, file, versionPath, releaseType, 
 
   // Bump the version in the package.json
   if(skipBump){
-    // If we are skipping the bump, we either use the old version or alternatively the fallback version
     const fallbackVersion = core.getInput('fallback-version')
-    versioning.newVersion = versioning.oldVersion || fallbackVersion
+    if (typeof versioning.loadVersion === 'function') {
+      // For git versioning, tags are loaded asynchronously. loadVersion sets:
+      //   newVersion = most recent tag (current release, already tagged)
+      //   oldVersion = second most recent tag (previous release, for compare URL)
+      await versioning.loadVersion()
+      if (versioning.newVersion === null) {
+        versioning.newVersion = fallbackVersion
+      }
+    } else {
+      // If we are skipping the bump, we either use the old version or alternatively the fallback version
+      versioning.newVersion = versioning.oldVersion || fallbackVersion
+    }
   } else {
     await versioning.bump(releaseType)
   }
@@ -127,6 +137,10 @@ async function run() {
 
     let newVersion
     let oldVersion
+    // previousTagForChangelog is set when HEAD is already at the release tag (skipBump + git
+    // versioning). It tells the changelog generator to use the already-tagged-commit workaround
+    // so the range previousTag..currentTag is used instead of currentTag..HEAD (which is empty).
+    let previousTagForChangelog = null
 
     // If skipVersionFile or skipCommit is true we use GIT to determine the new version because
     // skipVersionFile can mean there is no version file and skipCommit can mean that the user
@@ -143,6 +157,12 @@ async function run() {
 
       oldVersion = versioning.oldVersion
       newVersion = versioning.newVersion
+
+      // When skipBump is true, loadVersion was used: newVersion = current tag, oldVersion = previous tag.
+      // Pass previousTag so the changelog is generated for the range oldVersion..newVersion.
+      if (skipBump && oldVersion) {
+        previousTagForChangelog = `${tagPrefix}${oldVersion}`
+      }
     } else {
       const files = versionFile.split(',').map((f) => f.trim())
       core.info(`Files to bump: ${files.join(', ')}`)
@@ -176,7 +196,7 @@ async function run() {
     }
 
     // Generate the string changelog
-    const stringChangelog = await changelog.generateStringChangelog(tagPrefix, preset, newVersion, 1, config, gitPath, !prerelease)
+    const stringChangelog = await changelog.generateStringChangelog(tagPrefix, preset, newVersion, 1, config, gitPath, !prerelease, previousTagForChangelog)
     core.info('Changelog generated')
     core.info(stringChangelog)
 
@@ -196,7 +216,7 @@ async function run() {
     // If output file === 'false' we don't write it to file
     if (outputFile !== 'false') {
       // Generate the changelog
-      await changelog.generateFileChangelog(tagPrefix, preset, newVersion, outputFile, releaseCount, config, gitPath, infile)
+      await changelog.generateFileChangelog(tagPrefix, preset, newVersion, outputFile, releaseCount, config, gitPath, infile, previousTagForChangelog)
     }
 
     if (!skipCommit) {

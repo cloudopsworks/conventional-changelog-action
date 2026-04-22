@@ -13,25 +13,61 @@ const { loadPreset } = require('./load-preset')
  * @param config
  * @param gitPath
  * @param skipUnstable
+ * @param previousTag - when set, indicates HEAD is already at the release tag; enables
+ *                      correct changelog generation for already-tagged commits by working
+ *                      around conventional-changelog suppressing output when lastTag===version
  * @returns {*}
  */
-const getChangelogStream = async(tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable) => conventionalChangelog({
+const getChangelogStream = async(tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable, previousTag) => {
+  const currentTag = `${tagPrefix}${version}`
+  const isAlreadyTagged = !!previousTag
+
+  // When HEAD is already at the release tag, conventional-changelog-core detects
+  // lastTag === version and sets outputUnreleased=false (doFlush=false), producing empty
+  // output. Work around this by enabling outputUnreleased and fetching one extra release
+  // block so the range covers previousTag..currentTag rather than currentTag..HEAD.
+  const options = {
     preset: await loadPreset(preset),
-    releaseCount: parseInt(releaseCount, 10),
+    releaseCount: isAlreadyTagged ? parseInt(releaseCount, 10) + 1 : parseInt(releaseCount, 10),
     tagPrefix,
     config,
-    skipUnstable
-  },
-  {
+    skipUnstable,
+    ...(isAlreadyTagged && { outputUnreleased: true }),
+  }
+
+  const context = {
     version,
-    currentTag: `${tagPrefix}${version}`
-  },
-  {
-    path: gitPath === '' || gitPath === null ? undefined : gitPath
-  },
-  config && config.parserOpts,
-  config && config.writerOpts
-)
+    currentTag,
+    ...(isAlreadyTagged && { previousTag }),
+  }
+
+  // Our finalizeContext replaces the core's default. We must restore the correct version
+  // (core renames it to "Unreleased" when outputUnreleased=true) and ensure linkCompare
+  // is set so the header link renders as [version](previousTag...currentTag).
+  const writerOpts = Object.assign({}, config && config.writerOpts)
+  if (isAlreadyTagged) {
+    const origFinalizeContext = writerOpts.finalizeContext
+    writerOpts.finalizeContext = (ctx, opts, filteredCommits, keyCommit, originalCommits) => {
+      if (ctx.version === 'Unreleased') {
+        ctx.version = version
+        ctx.linkCompare = true
+        ctx.previousTag = previousTag
+        ctx.currentTag = currentTag
+      }
+      return origFinalizeContext
+        ? origFinalizeContext(ctx, opts, filteredCommits, keyCommit, originalCommits)
+        : ctx
+    }
+  }
+
+  return conventionalChangelog(
+    options,
+    context,
+    { path: gitPath === '' || gitPath === null ? undefined : gitPath },
+    config && config.parserOpts,
+    writerOpts,
+  )
+}
 
 module.exports = getChangelogStream
 
@@ -47,8 +83,8 @@ module.exports = getChangelogStream
  * @param skipUnstable
  * @returns {Promise<string>}
  */
-module.exports.generateStringChangelog = (tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable) => new Promise(async(resolve) => {
-  const changelogStream = await getChangelogStream(tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable)
+module.exports.generateStringChangelog = (tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable, previousTag) => new Promise(async(resolve) => {
+  const changelogStream = await getChangelogStream(tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable, previousTag)
 
   let changelog = ''
 
@@ -72,9 +108,9 @@ module.exports.generateStringChangelog = (tagPrefix, preset, version, releaseCou
  * @param infile
  * @returns {Promise<>}
  */
-module.exports.generateFileChangelog = (tagPrefix, preset, version, fileName, releaseCount, config, gitPath, infile) => new Promise(async(resolve) => {
+module.exports.generateFileChangelog = (tagPrefix, preset, version, fileName, releaseCount, config, gitPath, infile, previousTag) => new Promise(async(resolve) => {
   const changelogStream = await getChangelogStream(tagPrefix, preset, version, infile ? 1
-    : releaseCount, config, gitPath)
+    : releaseCount, config, gitPath, undefined, previousTag)
 
   // The default changelog output to be streamed first
   const readStreams = [changelogStream]
