@@ -1,3 +1,13 @@
+# [6.5.0](https://github.com/cloudopsworks/conventional-changelog-action/compare/v6.4.0...v6.5.0) (2026-04-22)
+
+
+### Features
+
+* Add support for better changelog generation and version management ([505a4bf](https://github.com/cloudopsworks/conventional-changelog-action/commit/505a4bfead1b587d06c49d6a9f3b3556193c73c3))
+* Refactor Handlebars templates for enhanced changelog customization ([b360ec1](https://github.com/cloudopsworks/conventional-changelog-action/commit/b360ec13790adeb48e260ad08e494b8d04c84f03))
+
+
+
 # [6.4.0](https://github.com/cloudopsworks/conventional-changelog-action/compare/v6.3.0...v6.4.0) (2026-03-18)
 
 
@@ -34,20 +44,6 @@
 ### Features
 
 * add version file support for java .properties file format ([5e05ac7](https://github.com/cloudopsworks/conventional-changelog-action/commit/5e05ac72a623fb401c96bc8fa36d2aa7b2134aac))
-
-
-
-# [6.0.0](https://github.com/cloudopsworks/conventional-changelog-action/compare/v5.4.0...v6.0.0) (2024-11-28)
-
-
-### Features
-
-* set corresponding prerelease type derived from releaseType ([792a7f7](https://github.com/cloudopsworks/conventional-changelog-action/commit/792a7f7645a5dd206d9af4cd9e985e9aa02506c8))
-
-
-### BREAKING CHANGES
-
-* prerelease option generates pre[major|minor|patch] release
 
 
 
