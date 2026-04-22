@@ -70,3 +70,9 @@ typings/
 lib
 
 node_modules
+
+# AI
+.ai/
+.omc/
+.claude/
+.opencode/

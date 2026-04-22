@@ -5686,10 +5686,10 @@ const { resolve } = __nccwpck_require__(6928)
 
 async function createWriterOpts () {
   const [template, header, commit, footer] = await Promise.all([
-    readFile(__nccwpck_require__.ab + "template2.hbs", 'utf-8'),
-    readFile(__nccwpck_require__.ab + "header2.hbs", 'utf-8'),
-    readFile(__nccwpck_require__.ab + "commit2.hbs", 'utf-8'),
-    readFile(__nccwpck_require__.ab + "footer1.hbs", 'utf-8')
+    readFile(__nccwpck_require__.ab + "template1.hbs", 'utf-8'),
+    readFile(__nccwpck_require__.ab + "header1.hbs", 'utf-8'),
+    readFile(__nccwpck_require__.ab + "commit1.hbs", 'utf-8'),
+    readFile(__nccwpck_require__.ab + "footer.hbs", 'utf-8')
   ])
   const writerOpts = getWriterOpts()
 
@@ -6030,10 +6030,10 @@ async function createWriterOpts (config) {
     commit,
     footer
   ] = await Promise.all([
-    readFile(__nccwpck_require__.ab + "template.hbs", 'utf-8'),
-    readFile(__nccwpck_require__.ab + "header.hbs", 'utf-8'),
-    readFile(__nccwpck_require__.ab + "commit.hbs", 'utf-8'),
-    readFile(__nccwpck_require__.ab + "footer.hbs", 'utf-8')
+    readFile(__nccwpck_require__.ab + "template2.hbs", 'utf-8'),
+    readFile(__nccwpck_require__.ab + "header2.hbs", 'utf-8'),
+    readFile(__nccwpck_require__.ab + "commit2.hbs", 'utf-8'),
+    readFile(__nccwpck_require__.ab + "footer1.hbs", 'utf-8')
   ])
   const writerOpts = getWriterOpts(finalConfig)
 
@@ -6848,9 +6848,9 @@ const { resolve } = __nccwpck_require__(6928)
 
 async function createWriterOpts () {
   const [template, header, commit] = await Promise.all([
-    readFile(__nccwpck_require__.ab + "template1.hbs", 'utf-8'),
-    readFile(__nccwpck_require__.ab + "header1.hbs", 'utf-8'),
-    readFile(__nccwpck_require__.ab + "commit1.hbs", 'utf-8')
+    readFile(__nccwpck_require__.ab + "template.hbs", 'utf-8'),
+    readFile(__nccwpck_require__.ab + "header.hbs", 'utf-8'),
+    readFile(__nccwpck_require__.ab + "commit.hbs", 'utf-8')
   ])
   const writerOpts = getWriterOpts()
 
@@ -60326,25 +60326,61 @@ const { loadPreset } = __nccwpck_require__(4875)
  * @param config
  * @param gitPath
  * @param skipUnstable
+ * @param previousTag - when set, indicates HEAD is already at the release tag; enables
+ *                      correct changelog generation for already-tagged commits by working
+ *                      around conventional-changelog suppressing output when lastTag===version
  * @returns {*}
  */
-const getChangelogStream = async(tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable) => conventionalChangelog({
+const getChangelogStream = async(tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable, previousTag) => {
+  const currentTag = `${tagPrefix}${version}`
+  const isAlreadyTagged = !!previousTag
+
+  // When HEAD is already at the release tag, conventional-changelog-core detects
+  // lastTag === version and sets outputUnreleased=false (doFlush=false), producing empty
+  // output. Work around this by enabling outputUnreleased and fetching one extra release
+  // block so the range covers previousTag..currentTag rather than currentTag..HEAD.
+  const options = {
     preset: await loadPreset(preset),
-    releaseCount: parseInt(releaseCount, 10),
+    releaseCount: isAlreadyTagged ? parseInt(releaseCount, 10) + 1 : parseInt(releaseCount, 10),
     tagPrefix,
     config,
-    skipUnstable
-  },
-  {
+    skipUnstable,
+    ...(isAlreadyTagged && { outputUnreleased: true }),
+  }
+
+  const context = {
     version,
-    currentTag: `${tagPrefix}${version}`
-  },
-  {
-    path: gitPath === '' || gitPath === null ? undefined : gitPath
-  },
-  config && config.parserOpts,
-  config && config.writerOpts
-)
+    currentTag,
+    ...(isAlreadyTagged && { previousTag }),
+  }
+
+  // Our finalizeContext replaces the core's default. We must restore the correct version
+  // (core renames it to "Unreleased" when outputUnreleased=true) and ensure linkCompare
+  // is set so the header link renders as [version](previousTag...currentTag).
+  const writerOpts = Object.assign({}, config && config.writerOpts)
+  if (isAlreadyTagged) {
+    const origFinalizeContext = writerOpts.finalizeContext
+    writerOpts.finalizeContext = (ctx, opts, filteredCommits, keyCommit, originalCommits) => {
+      if (ctx.version === 'Unreleased') {
+        ctx.version = version
+        ctx.linkCompare = true
+        ctx.previousTag = previousTag
+        ctx.currentTag = currentTag
+      }
+      return origFinalizeContext
+        ? origFinalizeContext(ctx, opts, filteredCommits, keyCommit, originalCommits)
+        : ctx
+    }
+  }
+
+  return conventionalChangelog(
+    options,
+    context,
+    { path: gitPath === '' || gitPath === null ? undefined : gitPath },
+    config && config.parserOpts,
+    writerOpts,
+  )
+}
 
 module.exports = getChangelogStream
 
@@ -60360,8 +60396,8 @@ module.exports = getChangelogStream
  * @param skipUnstable
  * @returns {Promise<string>}
  */
-module.exports.generateStringChangelog = (tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable) => new Promise(async(resolve) => {
-  const changelogStream = await getChangelogStream(tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable)
+module.exports.generateStringChangelog = (tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable, previousTag) => new Promise(async(resolve) => {
+  const changelogStream = await getChangelogStream(tagPrefix, preset, version, releaseCount, config, gitPath, skipUnstable, previousTag)
 
   let changelog = ''
 
@@ -60385,9 +60421,9 @@ module.exports.generateStringChangelog = (tagPrefix, preset, version, releaseCou
  * @param infile
  * @returns {Promise<>}
  */
-module.exports.generateFileChangelog = (tagPrefix, preset, version, fileName, releaseCount, config, gitPath, infile) => new Promise(async(resolve) => {
+module.exports.generateFileChangelog = (tagPrefix, preset, version, fileName, releaseCount, config, gitPath, infile, previousTag) => new Promise(async(resolve) => {
   const changelogStream = await getChangelogStream(tagPrefix, preset, version, infile ? 1
-    : releaseCount, config, gitPath)
+    : releaseCount, config, gitPath, undefined, previousTag)
 
   // The default changelog output to be streamed first
   const readStreams = [changelogStream]
@@ -60813,6 +60849,21 @@ module.exports = class Git extends BaseVersioning {
    */
   parseFile = () => {
 
+  }
+
+  /**
+   * Loads the current and previous version from git tags.
+   * Used when skip-bump is true: the most recent tag is the current release (newVersion)
+   * and the second most recent is the previous release (oldVersion for compare URL).
+   */
+  loadVersion = async() => {
+    const tagPrefix = core.getInput('tag-prefix')
+    const prerelease = core.getBooleanInput('pre-release')
+
+    const tags = await gitSemverTags({ tagPrefix, skipUnstable: !prerelease })
+    // tags[0] = current release (already tagged), tags[1] = previous release
+    this.newVersion = tags.length > 0 ? tags[0].replace(tagPrefix, '') : null
+    this.oldVersion = tags.length > 1 ? tags[1].replace(tagPrefix, '') : null
   }
 
   bump = async(releaseType) => {
@@ -71954,9 +72005,19 @@ async function handleVersioningByExtension(ext, file, versionPath, releaseType, 
 
   // Bump the version in the package.json
   if(skipBump){
-    // If we are skipping the bump, we either use the old version or alternatively the fallback version
     const fallbackVersion = core.getInput('fallback-version')
-    versioning.newVersion = versioning.oldVersion || fallbackVersion
+    if (typeof versioning.loadVersion === 'function') {
+      // For git versioning, tags are loaded asynchronously. loadVersion sets:
+      //   newVersion = most recent tag (current release, already tagged)
+      //   oldVersion = second most recent tag (previous release, for compare URL)
+      await versioning.loadVersion()
+      if (versioning.newVersion === null) {
+        versioning.newVersion = fallbackVersion
+      }
+    } else {
+      // If we are skipping the bump, we either use the old version or alternatively the fallback version
+      versioning.newVersion = versioning.oldVersion || fallbackVersion
+    }
   } else {
     await versioning.bump(releaseType)
   }
@@ -72065,6 +72126,10 @@ async function run() {
 
     let newVersion
     let oldVersion
+    // previousTagForChangelog is set when HEAD is already at the release tag (skipBump + git
+    // versioning). It tells the changelog generator to use the already-tagged-commit workaround
+    // so the range previousTag..currentTag is used instead of currentTag..HEAD (which is empty).
+    let previousTagForChangelog = null
 
     // If skipVersionFile or skipCommit is true we use GIT to determine the new version because
     // skipVersionFile can mean there is no version file and skipCommit can mean that the user
@@ -72081,6 +72146,12 @@ async function run() {
 
       oldVersion = versioning.oldVersion
       newVersion = versioning.newVersion
+
+      // When skipBump is true, loadVersion was used: newVersion = current tag, oldVersion = previous tag.
+      // Pass previousTag so the changelog is generated for the range oldVersion..newVersion.
+      if (skipBump && oldVersion) {
+        previousTagForChangelog = `${tagPrefix}${oldVersion}`
+      }
     } else {
       const files = versionFile.split(',').map((f) => f.trim())
       core.info(`Files to bump: ${files.join(', ')}`)
@@ -72114,7 +72185,7 @@ async function run() {
     }
 
     // Generate the string changelog
-    const stringChangelog = await changelog.generateStringChangelog(tagPrefix, preset, newVersion, 1, config, gitPath, !prerelease)
+    const stringChangelog = await changelog.generateStringChangelog(tagPrefix, preset, newVersion, 1, config, gitPath, !prerelease, previousTagForChangelog)
     core.info('Changelog generated')
     core.info(stringChangelog)
 
@@ -72134,7 +72205,7 @@ async function run() {
     // If output file === 'false' we don't write it to file
     if (outputFile !== 'false') {
       // Generate the changelog
-      await changelog.generateFileChangelog(tagPrefix, preset, newVersion, outputFile, releaseCount, config, gitPath, infile)
+      await changelog.generateFileChangelog(tagPrefix, preset, newVersion, outputFile, releaseCount, config, gitPath, infile, previousTagForChangelog)
     }
 
     if (!skipCommit) {
